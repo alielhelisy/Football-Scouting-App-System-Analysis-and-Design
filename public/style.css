@@ -1,0 +1,405 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  background: #1a472a;
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+}
+
+.header-content {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* ── Main ── */
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.position-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 0.4rem 1.1rem;
+  border: 2px solid #1a472a;
+  background: white;
+  color: #1a472a;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab-btn:hover { background: #e8f5e9; }
+.tab-btn.active { background: #1a472a; color: white; }
+
+/* ── Players grid ── */
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.25rem;
+}
+
+.player-card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  overflow: hidden;
+  transition: transform 0.18s, box-shadow 0.18s;
+  display: flex;
+  flex-direction: column;
+}
+
+.player-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.player-card-header {
+  background: linear-gradient(135deg, #1a472a 0%, #2d6a4f 100%);
+  padding: 0.8rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.position-badge {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 0.2rem 0.65rem;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.position-badge.lg {
+  font-size: 0.9rem;
+  padding: 0.3rem 0.85rem;
+}
+
+.player-card-body {
+  padding: 1rem 1rem 0.5rem;
+  flex: 1;
+}
+
+.player-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: #1a202c;
+}
+
+.player-team {
+  font-size: 0.83rem;
+  color: #718096;
+}
+
+.player-card-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+/* ── Buttons ── */
+.btn {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.97); }
+.btn:hover { opacity: 0.85; }
+
+.btn-primary   { background: #1a472a; color: white; }
+.btn-secondary { background: #e2e8f0; color: #4a5568; }
+.btn-danger    { background: #e53e3e; color: white; }
+.btn-sm { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
+
+/* ── Detail view ── */
+.detail-header {
+  background: white;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.player-info { flex: 1; min-width: 200px; }
+
+.player-info h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0.5rem 0 0.2rem;
+}
+
+.avg-stars {
+  color: #d97706;
+  font-size: 1.1rem;
+  margin-top: 0.4rem;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+}
+
+/* ── Reports ── */
+.reports-section {
+  background: white;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.reports-section h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.report-card {
+  border: 1px solid #e8edf2;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.85rem;
+  background: #fafbfc;
+}
+
+.report-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.report-stars { color: #d97706; font-size: 1rem; }
+
+.report-date {
+  font-size: 0.78rem;
+  color: #a0aec0;
+  margin-left: auto;
+}
+
+.report-delete-btn {
+  background: none;
+  border: none;
+  color: #fc8181;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.report-delete-btn:hover { color: #e53e3e; }
+
+.report-stats {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.83rem;
+  color: #4a5568;
+  margin-bottom: 0.4rem;
+}
+
+.report-comments {
+  font-size: 0.87rem;
+  color: #4a5568;
+  background: #edf2f7;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 0.18rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-red    { background: #fee2e2; color: #991b1b; }
+.badge-none   { background: #dcfce7; color: #166534; }
+
+/* ── Modal ── */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(2px);
+}
+
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: white;
+  border-radius: 14px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  animation: slide-up 0.2s ease;
+}
+
+.modal-small { max-width: 380px; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1a202c;
+}
+
+.modal-content p {
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* ── Forms ── */
+.form-group { margin-bottom: 1.1rem; }
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1a472a;
+  box-shadow: 0 0 0 3px rgba(26,71,42,0.12);
+}
+
+.field-error {
+  display: block;
+  color: #e53e3e;
+  font-size: 0.78rem;
+  margin-top: 0.3rem;
+  min-height: 1em;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center;
+  padding: 3.5rem 1rem;
+  color: #a0aec0;
+}
+
+.empty-state p { font-size: 0.95rem; }
+
+/* ── No rating ── */
+.no-rating { color: #cbd5e0; font-size: 0.85rem; }
+
+/* ── Count badge on card header ── */
+.report-count {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.65);
+  font-weight: 500;
+}
