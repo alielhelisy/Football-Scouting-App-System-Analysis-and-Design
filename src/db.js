@@ -1,40 +1,57 @@
-const { DatabaseSync } = require('node:sqlite');
-const path = require('path');
+const sql = require('mssql');
 
-const DB_PATH = path.join(__dirname, '..', 'scouting.db');
+const config = {
+  server: 'localhost\\SQLEXPRESS',
+  authentication: {
+    type: 'default',
+    options: {
+      userName: 'scout_user',
+      password: 'Scout@123',
+    },
+  },
+  options: {
+    database: 'ScoutingAppSAD',
+    trustServerCertificate: true,
+    encrypt: true,
+    enableArithAbort: true,
+  },
+};
 
-let db;
+let pool;
 
-function getDb() {
-  if (!db) {
-    db = new DatabaseSync(DB_PATH);
-    db.exec('PRAGMA journal_mode = WAL');
-    db.exec('PRAGMA foreign_keys = ON');
-    initSchema(db);
+async function getPool() {
+  if (!pool) {
+    pool = await sql.connect(config);
   }
-  return db;
+  return pool;
 }
 
-function initSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS players (
-      id       INTEGER PRIMARY KEY AUTOINCREMENT,
-      name     TEXT NOT NULL,
-      team     TEXT NOT NULL,
-      position TEXT NOT NULL
-    );
+async function initSchema() {
+  const p = await getPool();
 
-    CREATE TABLE IF NOT EXISTS reports (
-      id             INTEGER PRIMARY KEY AUTOINCREMENT,
-      player_id      INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-      rating         INTEGER NOT NULL,
-      minutes_played INTEGER NOT NULL,
-      goals_scored   INTEGER NOT NULL,
-      received_cards TEXT NOT NULL DEFAULT 'None',
-      comments       TEXT DEFAULT '',
-      created_at     TEXT DEFAULT (datetime('now'))
+  await p.request().query(`
+    IF OBJECT_ID('players', 'U') IS NULL
+    CREATE TABLE players (
+      id       INT IDENTITY(1,1) PRIMARY KEY,
+      name     NVARCHAR(100) NOT NULL,
+      team     NVARCHAR(100) NOT NULL,
+      position NVARCHAR(20)  NOT NULL
+    );
+  `);
+
+  await p.request().query(`
+    IF OBJECT_ID('reports', 'U') IS NULL
+    CREATE TABLE reports (
+      id             INT IDENTITY(1,1) PRIMARY KEY,
+      player_id      INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+      rating         INT NOT NULL,
+      minutes_played INT NOT NULL,
+      goals_scored   INT NOT NULL,
+      received_cards NVARCHAR(10)  NOT NULL DEFAULT 'None',
+      comments       NVARCHAR(MAX) DEFAULT '',
+      created_at     DATETIME      DEFAULT GETDATE()
     );
   `);
 }
 
-module.exports = { getDb };
+module.exports = { getPool, initSchema, sql };
