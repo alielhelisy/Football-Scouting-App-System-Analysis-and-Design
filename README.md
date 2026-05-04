@@ -1,5 +1,5 @@
 # Football Scouting Web Application
-### System Analysis and Design — Spring 2026
+### System Analysis and Design
 **Student:** Ali El-Helisy | **ID:** 220303928
 
 ---
