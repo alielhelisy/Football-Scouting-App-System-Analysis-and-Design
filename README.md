@@ -223,15 +223,17 @@ The tests cover the business logic functions in `src/logic.js`, including valida
 
 ## Valid Player Positions
 
-| Key | Description |
-| --- | --- |
+| Key | Display |
+|---|---|
+| GK | Goal Keeper |
 | CB | Center Back |
-| FB | Full Back |
-| 6ER | Defensive Midfielder |
-| 8ER | Box-to-Box Midfielder |
-| WIDE | Wide Player |
+| FB | Full Back (Walker) |
+| FB | Full Back (Cancelo) |
+| FB | Full Back (Delph) |
+| 6ER | Defensive Midfield |
+| 8ER |  Midfield |
+| Wide Plyaer | Winger |
 | CF | Center Forward |
-
 ---
 
 ## Business Logic
