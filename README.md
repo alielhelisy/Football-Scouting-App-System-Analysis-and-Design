@@ -227,9 +227,7 @@ The tests cover the business logic functions in `src/logic.js`, including valida
 |---|---|
 | GK | Goal Keeper |
 | CB | Center Back |
-| FB | Full Back (Walker) |
-| FB | Full Back (Cancelo) |
-| FB | Full Back (Delph) |
+| FB | Full Back |
 | 6ER | Defensive Midfield |
 | 8ER |  Midfield |
 | Wide Plyaer | Winger |
