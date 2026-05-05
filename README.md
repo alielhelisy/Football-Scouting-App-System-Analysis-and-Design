@@ -1,48 +1,69 @@
 # Football Scouting Web Application
-### System Analysis and Design
-**Student:** Ali Elhelisy | **ID:** 220303928
+
+### System Analysis and Design - Spring 2026
+
+**Student:** Ali El-Helisy  
+**ID:** 220303928
 
 ---
 
 ## Project Overview
 
-A full-stack web application for football scouts to manage players and record match reports.
-Built as a Single-Page Application (SPA) with a RESTful Node.js/Express backend and a SQL Server database.
+Football Scouting Web Application is a full-stack web app for managing football players and recording scouting match reports. Scouts can add, update, delete, filter, and view players, then attach detailed match reports with ratings, minutes played, goals, cards, comments, and calculated average ratings.
+
+The project is built as a vanilla JavaScript single-page application with a RESTful Node.js/Express backend, Microsoft SQL Server database, Swagger API documentation, and Jest unit tests.
+
+---
+
+## Features
+
+- Player CRUD: create, view, update, and delete football players
+- Match report management for each player
+- One-to-many relationship between players and reports
+- Position-based filtering
+- Average rating calculation
+- Frontend and backend validation
+- RESTful JSON API
+- Swagger UI API documentation
+- SQL Server database schema auto-initialization
+- Jest unit tests for business logic
 
 ---
 
 ## Tech Stack
 
-| Layer       | Technology                        |
-|-------------|-----------------------------------|
-| Backend     | Node.js + Express                 |
-| Database    | Microsoft SQL Server (SQLEXPRESS) |
-| Frontend    | Vanilla JavaScript SPA            |
-| API Docs    | Swagger UI (OpenAPI 3.0)          |
-| Testing     | Jest                              |
+| Layer | Technology |
+| --- | --- |
+| Backend | Node.js, Express |
+| Database | Microsoft SQL Server Express |
+| Frontend | HTML, CSS, Vanilla JavaScript SPA |
+| API Docs | Swagger UI, OpenAPI 3.0 |
+| Testing | Jest |
 
 ---
 
 ## Project Structure
 
-```
+```text
 scouting_app/
-├── src/
-│   ├── server.js          ← Entry point, starts the HTTP server
-│   ├── app.js             ← Express app, middleware, route mounting
-│   ├── db.js              ← SQL Server connection + schema init
-│   ├── logic.js           ← Pure business logic functions (testable)
-│   ├── swagger.js         ← Swagger/OpenAPI spec config
-│   └── routes/
-│       ├── players.js     ← Player CRUD + nested report endpoints
-│       └── reports.js     ← Standalone report DELETE endpoint
-├── public/
-│   ├── index.html         ← SPA shell
-│   ├── app.js             ← Vanilla JS SPA logic
-│   └── style.css          ← All styles
-├── tests/
-│   └── logic.test.js      ← 37 Jest unit tests
-└── package.json
+|-- public/
+|   |-- index.html
+|   |-- app.js
+|   `-- style.css
+|-- src/
+|   |-- app.js
+|   |-- db.js
+|   |-- logic.js
+|   |-- server.js
+|   |-- swagger.js
+|   `-- routes/
+|       |-- players.js
+|       `-- reports.js
+|-- tests/
+|   `-- logic.test.js
+|-- package.json
+|-- package-lock.json
+`-- README.md
 ```
 
 ---
@@ -51,19 +72,19 @@ scouting_app/
 
 ```sql
 players
-  id       INT IDENTITY(1,1) PK
+  id       INT IDENTITY(1,1) PRIMARY KEY
   name     NVARCHAR(100) NOT NULL
   team     NVARCHAR(100) NOT NULL
-  position NVARCHAR(20)  NOT NULL  -- CB | FB | 6ER | 8ER | WIDE | CF
+  position NVARCHAR(20)  NOT NULL
 
 reports
-  id             INT IDENTITY(1,1) PK
-  player_id      INT FK -> players(id) ON DELETE CASCADE
-  rating         INT            -- 1–5
-  minutes_played INT
-  goals_scored   INT
-  received_cards NVARCHAR(10)   -- None | Yellow | Red
-  comments       NVARCHAR(MAX)
+  id             INT IDENTITY(1,1) PRIMARY KEY
+  player_id      INT NOT NULL REFERENCES players(id) ON DELETE CASCADE
+  rating         INT NOT NULL
+  minutes_played INT NOT NULL
+  goals_scored   INT NOT NULL
+  received_cards NVARCHAR(10) NOT NULL DEFAULT 'None'
+  comments       NVARCHAR(MAX) DEFAULT ''
   created_at     DATETIME DEFAULT GETDATE()
 ```
 
@@ -71,13 +92,17 @@ reports
 
 ## Prerequisites
 
-- Node.js (v22+)
-- Microsoft SQL Server Express (SQLEXPRESS instance)
-- SQL Server Browser service running
+- Node.js v22 or newer
+- Microsoft SQL Server Express
+- SQL Server Management Studio
+- SQL Server Browser service enabled
 
-### One-time SQL Server setup
+---
 
-Run in SSMS:
+## SQL Server Setup
+
+Run this once in SQL Server Management Studio:
+
 ```sql
 CREATE DATABASE ScoutingAppSAD;
 
@@ -88,32 +113,47 @@ CREATE USER scout_user FOR LOGIN scout_user;
 ALTER ROLE db_owner ADD MEMBER scout_user;
 ```
 
+The app connects to:
+
+```text
+localhost\SQLEXPRESS
+Database: ScoutingAppSAD
+User: scout_user
+```
+
 ---
 
-## Setup and Running
-
-### 1. Install dependencies
+## Installation
 
 ```bash
-cd scouting_app
 npm install
 ```
 
-### 2. Start the server
+---
+
+## Running the App
 
 ```bash
 npm start
 ```
 
-Tables are created automatically on first start.
+The server creates the required tables automatically if they do not already exist.
 
-Open the app at: **http://localhost:3000**
+Open the app:
 
-### 3. Swagger UI (interactive API docs)
+```text
+http://localhost:3000
+```
 
-Navigate to: **http://localhost:3000/api-docs**
+Open Swagger API docs:
 
-### 4. Development mode (auto-restart)
+```text
+http://localhost:3000/api-docs
+```
+
+---
+
+## Development Mode
 
 ```bash
 npm run dev
@@ -127,24 +167,24 @@ npm run dev
 npm test
 ```
 
-Tests cover all business logic functions in `src/logic.js`. Routes are not tested.
+The test suite currently includes 58 unit tests covering the business logic functions in `src/logic.js`.
 
 ---
 
 ## API Reference
 
-| Method | Endpoint                   | Description                             |
-|--------|----------------------------|-----------------------------------------|
-| GET    | `/api/players`             | Get all players (optional `?position=`) |
-| POST   | `/api/players`             | Create a player                         |
-| GET    | `/api/players/:id`         | Get player + reports + average rating   |
-| PUT    | `/api/players/:id`         | Update a player                         |
-| DELETE | `/api/players/:id`         | Delete player (cascades to reports)     |
-| GET    | `/api/players/:id/reports` | Get all reports for a player            |
-| POST   | `/api/players/:id/reports` | Create a match report                   |
-| DELETE | `/api/reports/:id`         | Delete a report                         |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/players` | Get all players, optionally filtered by position |
+| POST | `/api/players` | Create a new player |
+| GET | `/api/players/:id` | Get one player with reports and average rating |
+| PUT | `/api/players/:id` | Update a player |
+| DELETE | `/api/players/:id` | Delete a player and cascade-delete reports |
+| GET | `/api/players/:id/reports` | Get reports for a player |
+| POST | `/api/players/:id/reports` | Create a report for a player |
+| DELETE | `/api/reports/:id` | Delete a report |
 
-### Player — POST/PUT body
+### Player Request Body
 
 ```json
 {
@@ -154,7 +194,7 @@ Tests cover all business logic functions in `src/logic.js`. Routes are not teste
 }
 ```
 
-### Report — POST body
+### Report Request Body
 
 ```json
 {
@@ -168,46 +208,49 @@ Tests cover all business logic functions in `src/logic.js`. Routes are not teste
 
 ---
 
-## Positions
+## Valid Positions
 
-| Key  | Description      |
-|------|------------------|
-| CB   | Center Back      |
-| FB   | Full Back        |
-| 6ER  | Defensive Mid    |
-| 8ER  | Box-to-Box Mid   |
-| WIDE | Wide Player      |
-| CF   | Center Forward   |
-
----
-
-## Business Logic (src/logic.js)
-
-| Function                  | Description                                   |
-|---------------------------|-----------------------------------------------|
-| `validatePlayerName`      | Not empty, max 100 chars                      |
-| `validateTeam`            | Not empty, max 100 chars                      |
-| `validatePosition`        | Must be one of the 6 valid positions          |
-| `validateRating`          | Integer between 1 and 5                       |
-| `validateNonNegativeInt`  | Integer >= 0 (used for minutes and goals)     |
-| `validateCards`           | Must be None, Yellow, or Red                  |
-| `computeAverageRating`    | Average of report ratings, rounded to 1 d.p.  |
-| `filterPlayersByPosition` | Filter player array by position key           |
-| `starsDisplay`            | Convert numeric average to star string        |
+| Key | Description |
+| --- | --- |
+| CB | Center Back |
+| FB | Full Back |
+| 6ER | Defensive Midfielder |
+| 8ER | Box-to-Box Midfielder |
+| WIDE | Wide Player |
+| CF | Center Forward |
 
 ---
 
-## Grading Checklist
+## Business Logic
 
-- [x] Full CRUD on Players entity
-- [x] Reports as a related entity (one-to-many)
-- [x] Position-based search/filter
-- [x] RESTful API with correct HTTP methods and status codes
-- [x] JSON request/response format
-- [x] Input validation on both frontend and backend
-- [x] Business logic separated from routes (`src/logic.js`)
-- [x] 37 Jest unit tests covering all logic functions
-- [x] Swagger UI at `/api-docs`
-- [x] Vanilla JS SPA — no frameworks, no page reloads
-- [x] SQL Server database via SSMS
-- [x] README with setup, API docs, and structure
+The `src/logic.js` module contains pure functions that are separated from Express routes and covered by Jest tests.
+
+| Function | Purpose |
+| --- | --- |
+| `validatePlayerName` | Validates required player name and max length |
+| `validateTeam` | Validates required team name and max length |
+| `validatePosition` | Validates position key |
+| `validateRating` | Validates rating from 1 to 5 |
+| `validateNonNegativeInt` | Validates minutes and goals |
+| `validateCards` | Validates card value |
+| `computeAverageRating` | Calculates average report rating |
+| `filterPlayersByPosition` | Filters players by position |
+| `starsDisplay` | Converts ratings to star display text |
+
+---
+
+## Course Checklist
+
+- [x] Full CRUD for players
+- [x] Related reports entity
+- [x] One-to-many database relationship
+- [x] Position filter/search
+- [x] RESTful API design
+- [x] JSON request and response format
+- [x] Frontend validation
+- [x] Backend validation
+- [x] Separated business logic
+- [x] Jest unit tests
+- [x] Swagger API documentation
+- [x] Vanilla JavaScript SPA
+- [x] SQL Server database integration
