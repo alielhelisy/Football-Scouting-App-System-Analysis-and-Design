@@ -2,42 +2,40 @@
 
 ### System Analysis and Design - Spring 2026
 
-**Student:** Ali El-Helisy  
+**Student:** Ali Elhelisy  
 **ID:** 220303928
 
 ---
 
-## Project Overview
+## Overview
 
-Football Scouting Web Application is a full-stack web app for managing football players and recording scouting match reports. Scouts can add, update, delete, filter, and view players, then attach detailed match reports with ratings, minutes played, goals, cards, comments, and calculated average ratings.
+Football Scouting Web Application is a full-stack web application designed to help football scouts organize player information and record match reports in one place. The system allows users to manage players, filter them by position, add scouting reports, review player performance, and calculate average ratings based on submitted reports.
 
-The project is built as a vanilla JavaScript single-page application with a RESTful Node.js/Express backend, Microsoft SQL Server database, Swagger API documentation, and Jest unit tests.
-
----
-
-## Features
-
-- Player CRUD: create, view, update, and delete football players
-- Match report management for each player
-- One-to-many relationship between players and reports
-- Position-based filtering
-- Average rating calculation
-- Frontend and backend validation
-- RESTful JSON API
-- Swagger UI API documentation
-- SQL Server database schema auto-initialization
-- Jest unit tests for business logic
+The application uses a vanilla JavaScript single-page frontend with a RESTful Node.js and Express backend. Data is stored in Microsoft SQL Server, and the API is documented with Swagger UI.
 
 ---
 
-## Tech Stack
+## Main Features
+
+- Manage football players with create, read, update, and delete operations
+- Filter players by football position
+- Add match reports for individual players
+- Store report details such as rating, minutes played, goals, cards, and comments
+- View each player's reports and calculated average rating
+- Validate user input on both frontend and backend
+- Use a RESTful JSON API
+- Provide interactive API documentation with Swagger UI
+
+---
+
+## Technologies Used
 
 | Layer | Technology |
 | --- | --- |
+| Frontend | HTML, CSS, Vanilla JavaScript |
 | Backend | Node.js, Express |
 | Database | Microsoft SQL Server Express |
-| Frontend | HTML, CSS, Vanilla JavaScript SPA |
-| API Docs | Swagger UI, OpenAPI 3.0 |
+| API Documentation | Swagger UI, OpenAPI 3.0 |
 | Testing | Jest |
 
 ---
@@ -68,7 +66,14 @@ scouting_app/
 
 ---
 
-## Database Schema
+## Database Design
+
+The database contains two main tables:
+
+- `players`: stores player name, team, and position
+- `reports`: stores match report details linked to a player
+
+Each player can have multiple reports. When a player is deleted, the related reports are deleted automatically through cascade delete.
 
 ```sql
 players
@@ -101,7 +106,7 @@ reports
 
 ## SQL Server Setup
 
-Run this once in SQL Server Management Studio:
+Run the following SQL commands once in SQL Server Management Studio:
 
 ```sql
 CREATE DATABASE ScoutingAppSAD;
@@ -113,10 +118,10 @@ CREATE USER scout_user FOR LOGIN scout_user;
 ALTER ROLE db_owner ADD MEMBER scout_user;
 ```
 
-The app connects to:
+The application connects to:
 
 ```text
-localhost\SQLEXPRESS
+Server: localhost\SQLEXPRESS
 Database: ScoutingAppSAD
 User: scout_user
 ```
@@ -125,27 +130,31 @@ User: scout_user
 
 ## Installation
 
+Install the project dependencies:
+
 ```bash
 npm install
 ```
 
 ---
 
-## Running the App
+## Running the Application
+
+Start the server:
 
 ```bash
 npm start
 ```
 
-The server creates the required tables automatically if they do not already exist.
+The database tables are created automatically when the server starts if they do not already exist.
 
-Open the app:
+Open the web application:
 
 ```text
 http://localhost:3000
 ```
 
-Open Swagger API docs:
+Open the Swagger API documentation:
 
 ```text
 http://localhost:3000/api-docs
@@ -155,23 +164,27 @@ http://localhost:3000/api-docs
 
 ## Development Mode
 
+Run the server with automatic restart:
+
 ```bash
 npm run dev
 ```
 
 ---
 
-## Running Tests
+## Testing
+
+Run the Jest test suite:
 
 ```bash
 npm test
 ```
 
-The test suite currently includes 58 unit tests covering the business logic functions in `src/logic.js`.
+The tests cover the business logic functions in `src/logic.js`, including validation, filtering, rating calculation, and star display formatting.
 
 ---
 
-## API Reference
+## API Endpoints
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
@@ -179,12 +192,12 @@ The test suite currently includes 58 unit tests covering the business logic func
 | POST | `/api/players` | Create a new player |
 | GET | `/api/players/:id` | Get one player with reports and average rating |
 | PUT | `/api/players/:id` | Update a player |
-| DELETE | `/api/players/:id` | Delete a player and cascade-delete reports |
+| DELETE | `/api/players/:id` | Delete a player and its reports |
 | GET | `/api/players/:id/reports` | Get reports for a player |
 | POST | `/api/players/:id/reports` | Create a report for a player |
 | DELETE | `/api/reports/:id` | Delete a report |
 
-### Player Request Body
+### Player Request Example
 
 ```json
 {
@@ -194,7 +207,7 @@ The test suite currently includes 58 unit tests covering the business logic func
 }
 ```
 
-### Report Request Body
+### Report Request Example
 
 ```json
 {
@@ -202,13 +215,13 @@ The test suite currently includes 58 unit tests covering the business logic func
   "minutes_played": 90,
   "goals_scored": 1,
   "received_cards": "None",
-  "comments": "Strong pressing, two key assists"
+  "comments": "Strong pressing and good movement off the ball"
 }
 ```
 
 ---
 
-## Valid Positions
+## Valid Player Positions
 
 | Key | Description |
 | --- | --- |
@@ -223,34 +236,16 @@ The test suite currently includes 58 unit tests covering the business logic func
 
 ## Business Logic
 
-The `src/logic.js` module contains pure functions that are separated from Express routes and covered by Jest tests.
+The `src/logic.js` file contains reusable business logic that is separated from the route handlers. This keeps validation and calculation functions easier to test and maintain.
 
 | Function | Purpose |
 | --- | --- |
-| `validatePlayerName` | Validates required player name and max length |
-| `validateTeam` | Validates required team name and max length |
-| `validatePosition` | Validates position key |
-| `validateRating` | Validates rating from 1 to 5 |
-| `validateNonNegativeInt` | Validates minutes and goals |
-| `validateCards` | Validates card value |
-| `computeAverageRating` | Calculates average report rating |
+| `validatePlayerName` | Validates player name input |
+| `validateTeam` | Validates team name input |
+| `validatePosition` | Validates player position |
+| `validateRating` | Validates report rating |
+| `validateNonNegativeInt` | Validates numeric report fields |
+| `validateCards` | Validates card selection |
+| `computeAverageRating` | Calculates a player's average rating |
 | `filterPlayersByPosition` | Filters players by position |
-| `starsDisplay` | Converts ratings to star display text |
-
----
-
-## Course Checklist
-
-- [x] Full CRUD for players
-- [x] Related reports entity
-- [x] One-to-many database relationship
-- [x] Position filter/search
-- [x] RESTful API design
-- [x] JSON request and response format
-- [x] Frontend validation
-- [x] Backend validation
-- [x] Separated business logic
-- [x] Jest unit tests
-- [x] Swagger API documentation
-- [x] Vanilla JavaScript SPA
-- [x] SQL Server database integration
+| `starsDisplay` | Formats ratings as stars |
