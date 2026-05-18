@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { getPool, sql } = require('../db');
 const logic = require('../logic');
+const { authMiddleware } = require('../middleware/auth');
+
+// All player routes require a valid JWT
+router.use(authMiddleware);
 
 /**
  * @swagger
@@ -13,7 +17,6 @@ const logic = require('../logic');
  *       properties:
  *         id:
  *           type: integer
- *           example: 1
  *         name:
  *           type: string
  *           example: Mohamed Salah
@@ -23,7 +26,6 @@ const logic = require('../logic');
  *         position:
  *           type: string
  *           enum: [CB, FB, 6ER, 8ER, WIDE, CF]
- *           example: WIDE
  *     Report:
  *       type: object
  *       required: [rating, minutes_played, goals_scored, received_cards]
@@ -36,21 +38,14 @@ const logic = require('../logic');
  *           type: integer
  *           minimum: 1
  *           maximum: 5
- *           example: 4
  *         minutes_played:
  *           type: integer
- *           example: 90
  *         goals_scored:
  *           type: integer
- *           example: 1
  *         received_cards:
  *           type: string
  *           enum: [None, Yellow, Red]
- *           example: None
  *         comments:
- *           type: string
- *           example: Great pressing and link-up play
- *         created_at:
  *           type: string
  */
 
@@ -58,28 +53,32 @@ const logic = require('../logic');
  * @swagger
  * /api/players:
  *   get:
- *     summary: Get all players
+ *     summary: Get all players for the logged-in user
  *     tags: [Players]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: position
  *         schema:
  *           type: string
  *           enum: [CB, FB, 6ER, 8ER, WIDE, CF]
- *         description: Filter players by position
  *     responses:
  *       200:
  *         description: List of players
+ *       401:
+ *         description: Unauthorized
  */
 router.get('/', async (req, res) => {
   try {
     const pool = await getPool();
     const request = pool.request();
-    let query = 'SELECT * FROM players';
+    request.input('user_id', sql.Int, req.user.id);
+    let query = 'SELECT * FROM players WHERE user_id = @user_id';
 
     if (req.query.position) {
       request.input('position', sql.NVarChar(20), req.query.position);
-      query += ' WHERE position = @position';
+      query += ' AND position = @position';
     }
 
     query += ' ORDER BY name';
@@ -94,8 +93,10 @@ router.get('/', async (req, res) => {
  * @swagger
  * /api/players/{id}:
  *   get:
- *     summary: Get a player by ID (includes reports and average rating)
+ *     summary: Get a player by ID with reports
  *     tags: [Players]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -104,7 +105,7 @@ router.get('/', async (req, res) => {
  *           type: integer
  *     responses:
  *       200:
- *         description: Player with reports
+ *         description: Player with reports and average rating
  *       404:
  *         description: Player not found
  */
@@ -113,8 +114,9 @@ router.get('/:id', async (req, res) => {
     const pool = await getPool();
 
     const playerResult = await pool.request()
-      .input('id', sql.Int, parseInt(req.params.id))
-      .query('SELECT * FROM players WHERE id = @id');
+      .input('id',      sql.Int, parseInt(req.params.id))
+      .input('user_id', sql.Int, req.user.id)
+      .query('SELECT * FROM players WHERE id = @id AND user_id = @user_id');
 
     if (playerResult.recordset.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
@@ -139,6 +141,8 @@ router.get('/:id', async (req, res) => {
  *   post:
  *     summary: Create a new player
  *     tags: [Players]
+ *     security:
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -166,10 +170,11 @@ router.post('/', async (req, res) => {
   try {
     const pool = await getPool();
     const result = await pool.request()
+      .input('user_id',  sql.Int,           req.user.id)
       .input('name',     sql.NVarChar(100), name.trim())
       .input('team',     sql.NVarChar(100), team.trim())
       .input('position', sql.NVarChar(20),  position)
-      .query('INSERT INTO players (name, team, position) OUTPUT INSERTED.* VALUES (@name, @team, @position)');
+      .query('INSERT INTO players (user_id, name, team, position) OUTPUT INSERTED.* VALUES (@user_id, @name, @team, @position)');
 
     res.status(201).json(result.recordset[0]);
   } catch (err) {
@@ -183,6 +188,8 @@ router.post('/', async (req, res) => {
  *   put:
  *     summary: Update a player
  *     tags: [Players]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -198,8 +205,6 @@ router.post('/', async (req, res) => {
  *     responses:
  *       200:
  *         description: Player updated
- *       400:
- *         description: Validation errors
  *       404:
  *         description: Player not found
  */
@@ -208,8 +213,9 @@ router.put('/:id', async (req, res) => {
     const pool = await getPool();
 
     const existing = await pool.request()
-      .input('id', sql.Int, parseInt(req.params.id))
-      .query('SELECT id FROM players WHERE id = @id');
+      .input('id',      sql.Int, parseInt(req.params.id))
+      .input('user_id', sql.Int, req.user.id)
+      .query('SELECT id FROM players WHERE id = @id AND user_id = @user_id');
 
     if (existing.recordset.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
@@ -227,11 +233,12 @@ router.put('/:id', async (req, res) => {
     if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
     const result = await pool.request()
-      .input('id',       sql.Int,          parseInt(req.params.id))
+      .input('id',       sql.Int,           parseInt(req.params.id))
+      .input('user_id',  sql.Int,           req.user.id)
       .input('name',     sql.NVarChar(100), name.trim())
       .input('team',     sql.NVarChar(100), team.trim())
       .input('position', sql.NVarChar(20),  position)
-      .query('UPDATE players SET name = @name, team = @team, position = @position OUTPUT INSERTED.* WHERE id = @id');
+      .query('UPDATE players SET name = @name, team = @team, position = @position OUTPUT INSERTED.* WHERE id = @id AND user_id = @user_id');
 
     res.json(result.recordset[0]);
   } catch (err) {
@@ -243,8 +250,10 @@ router.put('/:id', async (req, res) => {
  * @swagger
  * /api/players/{id}:
  *   delete:
- *     summary: Delete a player (cascades to reports)
+ *     summary: Delete a player
  *     tags: [Players]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -262,8 +271,9 @@ router.delete('/:id', async (req, res) => {
     const pool = await getPool();
 
     const existing = await pool.request()
-      .input('id', sql.Int, parseInt(req.params.id))
-      .query('SELECT id FROM players WHERE id = @id');
+      .input('id',      sql.Int, parseInt(req.params.id))
+      .input('user_id', sql.Int, req.user.id)
+      .query('SELECT id FROM players WHERE id = @id AND user_id = @user_id');
 
     if (existing.recordset.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
@@ -285,6 +295,8 @@ router.delete('/:id', async (req, res) => {
  *   get:
  *     summary: Get all reports for a player
  *     tags: [Reports]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: playerId
@@ -302,8 +314,9 @@ router.get('/:playerId/reports', async (req, res) => {
     const pool = await getPool();
 
     const player = await pool.request()
-      .input('id', sql.Int, parseInt(req.params.playerId))
-      .query('SELECT id FROM players WHERE id = @id');
+      .input('id',      sql.Int, parseInt(req.params.playerId))
+      .input('user_id', sql.Int, req.user.id)
+      .query('SELECT id FROM players WHERE id = @id AND user_id = @user_id');
 
     if (player.recordset.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
@@ -323,8 +336,10 @@ router.get('/:playerId/reports', async (req, res) => {
  * @swagger
  * /api/players/{playerId}/reports:
  *   post:
- *     summary: Create a match report for a player
+ *     summary: Create a report for a player
  *     tags: [Reports]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: playerId
@@ -350,8 +365,9 @@ router.post('/:playerId/reports', async (req, res) => {
     const pool = await getPool();
 
     const player = await pool.request()
-      .input('id', sql.Int, parseInt(req.params.playerId))
-      .query('SELECT id FROM players WHERE id = @id');
+      .input('id',      sql.Int, parseInt(req.params.playerId))
+      .input('user_id', sql.Int, req.user.id)
+      .query('SELECT id FROM players WHERE id = @id AND user_id = @user_id');
 
     if (player.recordset.length === 0) {
       return res.status(404).json({ error: 'Player not found' });
@@ -371,11 +387,11 @@ router.post('/:playerId/reports', async (req, res) => {
     if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
     const result = await pool.request()
-      .input('player_id',      sql.Int,           parseInt(req.params.playerId))
-      .input('rating',         sql.Int,            Number(rating))
-      .input('minutes_played', sql.Int,            Number(minutes_played))
-      .input('goals_scored',   sql.Int,            Number(goals_scored))
-      .input('received_cards', sql.NVarChar(10),   received_cards)
+      .input('player_id',      sql.Int,               parseInt(req.params.playerId))
+      .input('rating',         sql.Int,               Number(rating))
+      .input('minutes_played', sql.Int,               Number(minutes_played))
+      .input('goals_scored',   sql.Int,               Number(goals_scored))
+      .input('received_cards', sql.NVarChar(10),      received_cards)
       .input('comments',       sql.NVarChar(sql.MAX), comments || '')
       .query(`
         INSERT INTO reports (player_id, rating, minutes_played, goals_scored, received_cards, comments)

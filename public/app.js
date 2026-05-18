@@ -1,13 +1,26 @@
+// ── Auth guard ─────────────────────────────────────────────────────────────
+const token = localStorage.getItem('token');
+if (!token) window.location.href = '/login.html';
+
+const username = localStorage.getItem('username') || 'Scout';
+document.getElementById('header-username').textContent = username;
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  window.location.href = '/login.html';
+});
+
 // ── State ──────────────────────────────────────────────────────────────────
 const state = {
-  view: 'list',           // 'list' | 'detail'
+  view: 'list',
   players: [],
   currentPlayer: null,
   positionFilter: '',
   editingPlayerId: null,
-  pendingDeleteType: null,  // 'player' | 'report'
+  pendingDeleteType: null,
   pendingDeleteId: null,
-  pendingDeleteExtra: null, // playerId when deleting a report
+  pendingDeleteExtra: null,
 };
 
 const POSITIONS = [
@@ -21,55 +34,64 @@ const POSITIONS = [
 ];
 
 // ── API layer ──────────────────────────────────────────────────────────────
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+}
+
 const api = {
   async getPlayers(position = '') {
     const url = position ? `/api/players?position=${encodeURIComponent(position)}` : '/api/players';
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: authHeaders() });
+    if (res.status === 401) { logout(); return []; }
     return res.json();
   },
 
   async getPlayer(id) {
-    const res = await fetch(`/api/players/${id}`);
+    const res = await fetch(`/api/players/${id}`, { headers: authHeaders() });
+    if (res.status === 401) { logout(); return null; }
     return res.json();
   },
 
   async createPlayer(data) {
     const res = await fetch('/api/players', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      method: 'POST', headers: authHeaders(), body: JSON.stringify(data),
     });
     return { ok: res.ok, data: await res.json() };
   },
 
   async updatePlayer(id, data) {
     const res = await fetch(`/api/players/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      method: 'PUT', headers: authHeaders(), body: JSON.stringify(data),
     });
     return { ok: res.ok, data: await res.json() };
   },
 
   async deletePlayer(id) {
-    const res = await fetch(`/api/players/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/players/${id}`, { method: 'DELETE', headers: authHeaders() });
     return res.ok;
   },
 
   async createReport(playerId, data) {
     const res = await fetch(`/api/players/${playerId}/reports`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      method: 'POST', headers: authHeaders(), body: JSON.stringify(data),
     });
     return { ok: res.ok, data: await res.json() };
   },
 
   async deleteReport(id) {
-    const res = await fetch(`/api/reports/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/reports/${id}`, { method: 'DELETE', headers: authHeaders() });
     return res.ok;
   },
 };
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  window.location.href = '/login.html';
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
@@ -110,7 +132,7 @@ function renderListView(players) {
       </div>
 
       ${players.length === 0
-        ? `<div class="empty-state"><p>No players found. Add your first scouted player!</p></div>`
+        ? `<div class="empty-state"><p>No players yet. Add your first scouted player!</p></div>`
         : `<div class="players-grid">
             ${players.map(p => `
               <div class="player-card">
@@ -191,9 +213,7 @@ function attachListEvents() {
     });
   });
 
-  document.getElementById('add-player-btn').addEventListener('click', () => {
-    openPlayerModal(null);
-  });
+  document.getElementById('add-player-btn').addEventListener('click', () => openPlayerModal(null));
 
   document.querySelectorAll('.edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -209,9 +229,7 @@ function attachListEvents() {
   });
 
   document.querySelectorAll('.details-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      showDetailView(parseInt(btn.dataset.id));
-    });
+    btn.addEventListener('click', () => showDetailView(parseInt(btn.dataset.id)));
   });
 }
 
@@ -228,9 +246,7 @@ function attachDetailEvents(playerId) {
     openPlayerModal(player);
   });
 
-  document.getElementById('add-report-btn').addEventListener('click', () => {
-    openReportModal(playerId);
-  });
+  document.getElementById('add-report-btn').addEventListener('click', () => openReportModal(playerId));
 
   document.querySelectorAll('.report-delete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -239,7 +255,6 @@ function attachDetailEvents(playerId) {
   });
 }
 
-// ── Navigation ─────────────────────────────────────────────────────────────
 async function showDetailView(playerId) {
   state.view = 'detail';
   const player = await api.getPlayer(playerId);
@@ -251,8 +266,8 @@ async function showDetailView(playerId) {
 function openPlayerModal(player) {
   state.editingPlayerId = player ? player.id : null;
   document.getElementById('modal-title').textContent = player ? 'Edit Player' : 'Add Player';
-  document.getElementById('player-name').value = player ? player.name : '';
-  document.getElementById('player-team').value = player ? player.team : '';
+  document.getElementById('player-name').value     = player ? player.name     : '';
+  document.getElementById('player-team').value     = player ? player.team     : '';
   document.getElementById('player-position').value = player ? player.position : '';
   clearErrors(['name-error', 'team-error', 'position-error']);
   document.getElementById('player-modal').classList.remove('hidden');
@@ -260,10 +275,10 @@ function openPlayerModal(player) {
 }
 
 function openReportModal(playerId) {
-  document.getElementById('report-rating').value = '3';
-  document.getElementById('report-minutes').value = '90';
-  document.getElementById('report-goals').value = '0';
-  document.getElementById('report-cards').value = 'None';
+  document.getElementById('report-rating').value   = '3';
+  document.getElementById('report-minutes').value  = '90';
+  document.getElementById('report-goals').value    = '0';
+  document.getElementById('report-cards').value    = 'None';
   document.getElementById('report-comments').value = '';
   clearErrors(['minutes-error', 'goals-error']);
   document.getElementById('report-modal').dataset.playerId = playerId;
@@ -271,8 +286,8 @@ function openReportModal(playerId) {
 }
 
 function openConfirmModal(type, id, message, extraId = null) {
-  state.pendingDeleteType = type;
-  state.pendingDeleteId = id;
+  state.pendingDeleteType  = type;
+  state.pendingDeleteId    = id;
   state.pendingDeleteExtra = extraId;
   document.getElementById('confirm-message').textContent = message;
   document.getElementById('confirm-modal').classList.remove('hidden');
@@ -283,10 +298,7 @@ function closeAllModals() {
 }
 
 function clearErrors(ids) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '';
-  });
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.textContent = ''; });
 }
 
 function showErrors(errors) {
@@ -316,30 +328,21 @@ function validateReportForm(minutes, goals) {
 // ── Form submissions ───────────────────────────────────────────────────────
 document.getElementById('player-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-
-  const name     = document.getElementById('player-name').value;
-  const team     = document.getElementById('player-team').value;
+  const name = document.getElementById('player-name').value;
+  const team = document.getElementById('player-team').value;
   const position = document.getElementById('player-position').value;
 
   clearErrors(['name-error', 'team-error', 'position-error']);
-
   const frontendErrors = validatePlayerForm(name, team, position);
-  if (Object.keys(frontendErrors).length > 0) {
-    showErrors(frontendErrors);
-    return;
-  }
+  if (Object.keys(frontendErrors).length > 0) { showErrors(frontendErrors); return; }
 
   const result = state.editingPlayerId
     ? await api.updatePlayer(state.editingPlayerId, { name, team, position })
     : await api.createPlayer({ name, team, position });
 
-  if (!result.ok) {
-    showErrors(result.data.errors || {});
-    return;
-  }
+  if (!result.ok) { showErrors(result.data.errors || {}); return; }
 
   closeAllModals();
-
   if (state.view === 'detail') {
     await showDetailView(state.editingPlayerId || result.data.id);
   } else {
@@ -351,18 +354,13 @@ document.getElementById('player-form').addEventListener('submit', async (e) => {
 
 document.getElementById('report-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-
   const playerId = parseInt(document.getElementById('report-modal').dataset.playerId);
   const minutes  = parseInt(document.getElementById('report-minutes').value);
   const goals    = parseInt(document.getElementById('report-goals').value);
 
   clearErrors(['minutes-error', 'goals-error']);
-
   const frontendErrors = validateReportForm(minutes, goals);
-  if (Object.keys(frontendErrors).length > 0) {
-    showErrors(frontendErrors);
-    return;
-  }
+  if (Object.keys(frontendErrors).length > 0) { showErrors(frontendErrors); return; }
 
   const result = await api.createReport(playerId, {
     rating:         parseInt(document.getElementById('report-rating').value),
@@ -372,11 +370,7 @@ document.getElementById('report-form').addEventListener('submit', async (e) => {
     comments:       document.getElementById('report-comments').value,
   });
 
-  if (!result.ok) {
-    showErrors(result.data.errors || {});
-    return;
-  }
-
+  if (!result.ok) { showErrors(result.data.errors || {}); return; }
   closeAllModals();
   await showDetailView(playerId);
 });
@@ -396,11 +390,9 @@ document.getElementById('confirm-yes').addEventListener('click', async () => {
   }
 });
 
-// Cancel / backdrop
 document.getElementById('cancel-player').addEventListener('click',  closeAllModals);
 document.getElementById('cancel-report').addEventListener('click',  closeAllModals);
 document.getElementById('cancel-confirm').addEventListener('click', closeAllModals);
-
 document.querySelectorAll('.modal').forEach(modal => {
   modal.addEventListener('click', (e) => { if (e.target === modal) closeAllModals(); });
 });

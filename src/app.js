@@ -3,6 +3,7 @@ const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const { swaggerSpec } = require('./swagger');
 
+const authRouter    = require('./routes/auth');
 const playersRouter = require('./routes/players');
 const reportsRouter = require('./routes/reports');
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api/auth',    authRouter);
 app.use('/api/players', playersRouter);
 app.use('/api/reports', reportsRouter);
 

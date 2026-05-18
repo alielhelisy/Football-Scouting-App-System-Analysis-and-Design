@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Scout Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo">&#9917; Scout Hub</div>
+    <h2>Create Account</h2>
+
+    <form id="register-form" novalidate>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Choose a username" autocomplete="username">
+        <span class="field-error" id="username-error"></span>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="At least 6 characters" autocomplete="new-password">
+        <span class="field-error" id="password-error"></span>
+      </div>
+      <div class="form-group">
+        <label for="confirm">Confirm Password</label>
+        <input type="password" id="confirm" placeholder="Repeat your password" autocomplete="new-password">
+        <span class="field-error" id="confirm-error"></span>
+      </div>
+      <span class="field-error" id="general-error"></span>
+      <button type="submit" class="btn btn-primary btn-full">Register</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="login.html">Login</a></p>
+  </div>
+
+  <script>
+    if (localStorage.getItem('token')) window.location.href = '/';
+
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm  = document.getElementById('confirm').value;
+
+      document.getElementById('username-error').textContent = '';
+      document.getElementById('password-error').textContent = '';
+      document.getElementById('confirm-error').textContent  = '';
+      document.getElementById('general-error').textContent  = '';
+
+      let valid = true;
+      if (!username || username.length < 3) {
+        document.getElementById('username-error').textContent = 'Username must be at least 3 characters';
+        valid = false;
+      }
+      if (!password || password.length < 6) {
+        document.getElementById('password-error').textContent = 'Password must be at least 6 characters';
+        valid = false;
+      }
+      if (password !== confirm) {
+        document.getElementById('confirm-error').textContent = 'Passwords do not match';
+        valid = false;
+      }
+      if (!valid) return;
+
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('general-error').textContent = data.error || 'Registration failed';
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', data.username);
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>

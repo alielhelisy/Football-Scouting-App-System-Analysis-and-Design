@@ -29,16 +29,41 @@ async function getPool() {
 async function initSchema() {
   const p = await getPool();
 
+  // Users table
+  await p.request().query(`
+    IF OBJECT_ID('users', 'U') IS NULL
+    CREATE TABLE users (
+      id            INT IDENTITY(1,1) PRIMARY KEY,
+      username      NVARCHAR(100) NOT NULL UNIQUE,
+      password_hash NVARCHAR(255) NOT NULL,
+      created_at    DATETIME DEFAULT GETDATE()
+    );
+  `);
+
+  // If players table exists without user_id, drop and recreate
+  const hasUserIdCol = await p.request().query(`
+    SELECT COUNT(*) AS cnt FROM sys.columns
+    WHERE object_id = OBJECT_ID('players') AND name = 'user_id'
+  `);
+
+  if (hasUserIdCol.recordset[0].cnt === 0) {
+    await p.request().query('IF OBJECT_ID(\'reports\', \'U\') IS NOT NULL DROP TABLE reports');
+    await p.request().query('IF OBJECT_ID(\'players\', \'U\') IS NOT NULL DROP TABLE players');
+  }
+
+  // Players table (with user_id)
   await p.request().query(`
     IF OBJECT_ID('players', 'U') IS NULL
     CREATE TABLE players (
       id       INT IDENTITY(1,1) PRIMARY KEY,
+      user_id  INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       name     NVARCHAR(100) NOT NULL,
       team     NVARCHAR(100) NOT NULL,
       position NVARCHAR(20)  NOT NULL
     );
   `);
 
+  // Reports table
   await p.request().query(`
     IF OBJECT_ID('reports', 'U') IS NULL
     CREATE TABLE reports (

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Scout Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo">&#9917; Scout Hub</div>
+    <h2>Sign In</h2>
+
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter your username" autocomplete="username">
+        <span class="field-error" id="username-error"></span>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+        <span class="field-error" id="password-error"></span>
+      </div>
+      <span class="field-error" id="general-error"></span>
+      <button type="submit" class="btn btn-primary btn-full">Login</button>
+    </form>
+
+    <p class="auth-switch">Don't have an account? <a href="register.html">Register</a></p>
+  </div>
+
+  <script>
+    // Redirect if already logged in
+    if (localStorage.getItem('token')) window.location.href = '/';
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      document.getElementById('username-error').textContent = '';
+      document.getElementById('password-error').textContent = '';
+      document.getElementById('general-error').textContent = '';
+
+      if (!username) { document.getElementById('username-error').textContent = 'Username is required'; return; }
+      if (!password) { document.getElementById('password-error').textContent = 'Password is required'; return; }
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('general-error').textContent = data.error || 'Login failed';
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', data.username);
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>
