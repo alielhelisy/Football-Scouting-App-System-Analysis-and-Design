@@ -6,7 +6,7 @@ const options = {
     info: {
       title: 'Football Scouting API',
       version: '1.0.0',
-      description: 'REST API for the Football Scouting Web Application. Supports full CRUD on Players and Reports with position-based filtering.',
+      description: 'REST API for the Football Scouting Web Application. Supports JWT authentication, user-specific data isolation, player CRUD, match reports, and position-based filtering.',
     },
     servers: [{ url: 'http://localhost:3000' }],
   },

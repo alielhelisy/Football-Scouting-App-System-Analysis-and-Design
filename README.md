@@ -9,22 +9,41 @@
 
 ## Overview
 
-Football Scouting Web Application is a full-stack web application designed to help football scouts organize player information and record match reports in one place. The system allows users to manage players, filter them by position, add scouting reports, review player performance, and calculate average ratings based on submitted reports.
+Football Scouting Web Application is a full-stack web application for managing football players and scouting match reports. Users can register, log in, manage their own players, filter players by position, add match reports, and review player performance through ratings and comments.
 
-The application uses a vanilla JavaScript single-page frontend with a RESTful Node.js and Express backend. Data is stored in Microsoft SQL Server, and the API is documented with Swagger UI.
+The application uses a vanilla JavaScript frontend with a RESTful Node.js and Express backend. Data is stored in Microsoft SQL Server, authentication is handled with JWT, and the API is documented with Swagger UI.
 
 ---
 
 ## Main Features
 
-- Manage football players with create, read, update, and delete operations
-- Filter players by football position
-- Add match reports for individual players
-- Store report details such as rating, minutes played, goals, cards, and comments
-- View each player's reports and calculated average rating
-- Validate user input on both frontend and backend
-- Use a RESTful JSON API
-- Provide interactive API documentation with Swagger UI
+- User registration and login
+- JWT-based authentication
+- User-specific data isolation
+- Player create, read, update, and delete operations
+- Position-based player filtering
+- Match reports for individual players
+- Rating, minutes played, goals, cards, and comments in each report
+- Average rating calculation for each player
+- Frontend and backend validation
+- RESTful JSON API
+- Swagger UI API documentation
+
+---
+
+## Authentication and Data Isolation
+
+The project uses JWT (JSON Web Token) authentication.
+
+After registration or login, the backend returns a JWT token. The frontend stores this token in `localStorage` and sends it with protected API requests using the `Authorization: Bearer <token>` header.
+
+All player and report routes are protected by authentication middleware. Each player record is linked to the logged-in user through `user_id`, so users can only view, create, update, and delete their own data. Report access is also checked through the owner of the related player, which prevents one user from accessing or deleting another user's reports.
+
+Example:
+
+- `user1` only sees players and reports created by `user1`
+- `user2` only sees players and reports created by `user2`
+- If `user2` tries to access `user1`'s player or report by ID, the API returns `404 Not Found`
 
 ---
 
@@ -34,6 +53,7 @@ The application uses a vanilla JavaScript single-page frontend with a RESTful No
 | --- | --- |
 | Frontend | HTML, CSS, Vanilla JavaScript |
 | Backend | Node.js, Express |
+| Authentication | JWT, bcryptjs |
 | Database | Microsoft SQL Server Express |
 | API Documentation | Swagger UI, OpenAPI 3.0 |
 | Testing | Jest |
@@ -46,6 +66,8 @@ The application uses a vanilla JavaScript single-page frontend with a RESTful No
 scouting_app/
 |-- public/
 |   |-- index.html
+|   |-- login.html
+|   |-- register.html
 |   |-- app.js
 |   `-- style.css
 |-- src/
@@ -54,7 +76,10 @@ scouting_app/
 |   |-- logic.js
 |   |-- server.js
 |   |-- swagger.js
+|   |-- middleware/
+|   |   `-- auth.js
 |   `-- routes/
+|       |-- auth.js
 |       |-- players.js
 |       `-- reports.js
 |-- tests/
@@ -68,16 +93,24 @@ scouting_app/
 
 ## Database Design
 
-The database contains two main tables:
+The database contains three main tables:
 
-- `players`: stores player name, team, and position
+- `users`: stores registered users and password hashes
+- `players`: stores player information and links each player to a user
 - `reports`: stores match report details linked to a player
 
-Each player can have multiple reports. When a player is deleted, the related reports are deleted automatically through cascade delete.
+Each user can have multiple players, and each player can have multiple reports. When a user is deleted, that user's players are deleted. When a player is deleted, the related reports are deleted automatically through cascade delete.
 
 ```sql
+users
+  id            INT IDENTITY(1,1) PRIMARY KEY
+  username      NVARCHAR(100) NOT NULL UNIQUE
+  password_hash NVARCHAR(255) NOT NULL
+  created_at    DATETIME DEFAULT GETDATE()
+
 players
   id       INT IDENTITY(1,1) PRIMARY KEY
+  user_id  INT NOT NULL REFERENCES users(id) ON DELETE CASCADE
   name     NVARCHAR(100) NOT NULL
   team     NVARCHAR(100) NOT NULL
   position NVARCHAR(20)  NOT NULL
@@ -188,21 +221,38 @@ The tests cover the business logic functions in `src/logic.js`, including valida
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| GET | `/api/players` | Get all players, optionally filtered by position |
-| POST | `/api/players` | Create a new player |
-| GET | `/api/players/:id` | Get one player with reports and average rating |
-| PUT | `/api/players/:id` | Update a player |
-| DELETE | `/api/players/:id` | Delete a player and its reports |
-| GET | `/api/players/:id/reports` | Get reports for a player |
-| POST | `/api/players/:id/reports` | Create a report for a player |
-| DELETE | `/api/reports/:id` | Delete a report |
+| POST | `/api/auth/register` | Register a new user and receive a JWT |
+| POST | `/api/auth/login` | Log in and receive a JWT |
+| GET | `/api/players` | Get the logged-in user's players, optionally filtered by position |
+| POST | `/api/players` | Create a player for the logged-in user |
+| GET | `/api/players/:id` | Get one owned player with reports and average rating |
+| PUT | `/api/players/:id` | Update an owned player |
+| DELETE | `/api/players/:id` | Delete an owned player and its reports |
+| GET | `/api/players/:id/reports` | Get reports for an owned player |
+| POST | `/api/players/:id/reports` | Create a report for an owned player |
+| DELETE | `/api/reports/:id` | Delete an owned report |
+
+Protected endpoints require:
+
+```text
+Authorization: Bearer <token>
+```
+
+### Register/Login Request Example
+
+```json
+{
+  "username": "user1",
+  "password": "password123"
+}
+```
 
 ### Player Request Example
 
 ```json
 {
-  "name": "Mohamed Salah",
-  "team": "Liverpool FC",
+  "name": "Player Name",
+  "team": "Team Name",
   "position": "WIDE"
 }
 ```
@@ -224,14 +274,14 @@ The tests cover the business logic functions in `src/logic.js`, including valida
 ## Valid Player Positions
 
 | Key | Display |
-|---|---|
-| GK | Goal Keeper |
-| CB | Center Back |
-| FB | Full Back |
-| 6ER | Defensive Midfield |
-| 8ER |  Midfield |
-| Wide Plyaer | Winger |
-| CF | Center Forward |
+| --- | --- |
+| CB | CB |
+| FB | FB |
+| 6ER | 6er |
+| 8ER | 8er |
+| WIDE | Wide |
+| CF | CF |
+
 ---
 
 ## Business Logic
