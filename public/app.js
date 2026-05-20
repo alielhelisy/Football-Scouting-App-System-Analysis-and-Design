@@ -192,7 +192,7 @@ function renderDetailView(player) {
                   <span class="report-rating">Rating: ${r.rating}</span>
                   ${cardBadge(r.received_cards)}
                   <span class="report-date">${formatDate(r.created_at)}</span>
-                  <button class="btn btn-sm btn-secondary report-edit-btn" data-id="${r.id}">Edit</button>
+                  <button class="btn btn-sm btn-secondary report-edit-btn" data-id="${r.id}">Edit Report</button>
                   <button class="report-delete-btn" data-id="${r.id}" title="Delete report">&#10005;</button>
                 </div>
                 <div class="report-stats">
