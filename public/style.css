@@ -253,7 +253,7 @@ header {
   margin: 0.5rem 0 0.2rem;
 }
 
-.avg-stars {
+.avg-rating {
   color: #d97706;
   font-size: 1.1rem;
   margin-top: 0.4rem;
@@ -298,7 +298,7 @@ header {
   margin-bottom: 0.5rem;
 }
 
-.report-stars { color: #d97706; font-size: 1rem; }
+.report-rating { color: #d97706; font-size: 1rem; font-weight: 700; }
 
 .report-date {
   font-size: 0.78rem;

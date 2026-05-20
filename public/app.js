@@ -108,11 +108,9 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function starsHtml(avg, large = false) {
+function ratingText(avg) {
   if (avg === null || avg === undefined) return '<span class="no-rating">No reports yet</span>';
-  const full = Math.round(avg);
-  const stars = '★'.repeat(full) + '☆'.repeat(5 - full);
-  return `<span style="font-size:${large ? '1.2rem' : '1rem'}">${stars}</span> <small>(${avg})</small>`;
+  return `Average rating: ${avg}/5`;
 }
 
 function cardBadge(card) {
@@ -176,7 +174,7 @@ function renderDetailView(player) {
           <span class="position-badge lg">${escapeHtml(player.position)}</span>
           <h2>${escapeHtml(player.name)}</h2>
           <p class="player-team">${escapeHtml(player.team)}</p>
-          <div class="avg-stars">${starsHtml(player.averageRating, true)}</div>
+          <div class="avg-rating">${ratingText(player.averageRating)}</div>
         </div>
         <div class="detail-actions">
           <button class="btn btn-secondary" id="edit-current-btn" data-id="${player.id}">Edit Player</button>
@@ -191,15 +189,15 @@ function renderDetailView(player) {
           : player.reports.map(r => `
               <div class="report-card">
                 <div class="report-top">
-                  <span class="report-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+                  <span class="report-rating">Rating: ${r.rating}/5</span>
                   ${cardBadge(r.received_cards)}
                   <span class="report-date">${formatDate(r.created_at)}</span>
                   <button class="btn btn-sm btn-secondary report-edit-btn" data-id="${r.id}">Edit</button>
                   <button class="report-delete-btn" data-id="${r.id}" title="Delete report">&#10005;</button>
                 </div>
                 <div class="report-stats">
-                  <span>&#9203; ${r.minutes_played} min</span>
-                  <span>&#9917; ${r.goals_scored} goal${r.goals_scored !== 1 ? 's' : ''}</span>
+                  <span>Minutes: ${r.minutes_played}</span>
+                  <span>Goals: ${r.goals_scored}</span>
                 </div>
                 ${r.comments ? `<div class="report-comments">${escapeHtml(r.comments)}</div>` : ''}
               </div>
