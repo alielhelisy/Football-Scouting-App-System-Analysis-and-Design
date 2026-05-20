@@ -283,6 +283,42 @@ Authorization: Bearer <token>
 }
 ```
 
+### Finding IDs in Swagger
+
+Player and report endpoints use different IDs:
+
+- `/api/players/{id}` uses the player ID
+- `/api/reports/{id}` uses the report ID
+- `/api/players/{playerId}/reports` uses the player ID to list that player's reports
+
+To edit a report in Swagger:
+
+1. Run `GET /api/players/{playerId}/reports`
+2. Copy the `id` from the report object in the response
+3. Use that report `id` in `PUT /api/reports/{id}`
+
+Example:
+
+```json
+[
+  {
+    "id": 5,
+    "player_id": 3,
+    "rating": 4,
+    "minutes_played": 90,
+    "goals_scored": 0,
+    "received_cards": "None",
+    "comments": "Match notes"
+  }
+]
+```
+
+In this example, `player_id` is `3`, but the report ID is `5`. To edit this report, use:
+
+```text
+PUT /api/reports/5
+```
+
 ---
 
 ## Valid Player Positions
