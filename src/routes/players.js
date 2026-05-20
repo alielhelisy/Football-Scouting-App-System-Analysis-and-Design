@@ -17,36 +17,45 @@ router.use(authMiddleware);
  *       properties:
  *         id:
  *           type: integer
+ *           readOnly: true
  *         name:
  *           type: string
- *           example: Mohamed Salah
+ *           example: Player Name
  *         team:
  *           type: string
- *           example: Liverpool FC
+ *           example: Team Name
  *         position:
  *           type: string
  *           enum: [CB, FB, 6ER, 8ER, WIDE, CF]
+ *           example: CB
  *     Report:
  *       type: object
  *       required: [rating, minutes_played, goals_scored, received_cards]
  *       properties:
  *         id:
  *           type: integer
+ *           readOnly: true
  *         player_id:
  *           type: integer
+ *           readOnly: true
  *         rating:
  *           type: integer
  *           minimum: 1
  *           maximum: 5
+ *           example: 4
  *         minutes_played:
  *           type: integer
+ *           example: 90
  *         goals_scored:
  *           type: integer
+ *           example: 0
  *         received_cards:
  *           type: string
  *           enum: [None, Yellow, Red]
+ *           example: None
  *         comments:
  *           type: string
+ *           example: Match notes
  */
 
 /**
