@@ -237,7 +237,7 @@ Run the Jest test suite:
 npm test
 ```
 
-The tests cover important business logic functions in `src/logic.js`, including player validation, team validation, position validation, rating validation, and average rating calculation.
+The project includes 20 focused Jest unit tests for important business logic functions in `src/logic.js`. These tests cover player validation, team validation, position validation, rating validation, non-negative numeric fields, card selection, average rating calculation, and player filtering.
 
 ---
 
