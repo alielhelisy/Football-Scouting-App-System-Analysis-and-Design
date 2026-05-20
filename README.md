@@ -45,6 +45,8 @@ Example:
 - `user2` only sees players and reports created by `user2`
 - If `user2` tries to access `user1`'s player or report by ID, the API returns `404 Not Found`
 
+This design satisfies the project requirement that each user's data must be private and separated from other users.
+
 ---
 
 ## Technologies Used
@@ -133,7 +135,7 @@ reports
 - Node.js v22 or newer
 - Microsoft SQL Server Express
 - SQL Server Management Studio
-- SQL Server Browser service enabled
+- SQL Server service enabled
 
 ---
 
@@ -154,10 +156,13 @@ ALTER ROLE db_owner ADD MEMBER scout_user;
 The application connects to:
 
 ```text
-Server: localhost\SQLEXPRESS
+Server: localhost
+Port: 1433
 Database: ScoutingAppSAD
 User: scout_user
 ```
+
+The project is configured to use the local SQL Server TCP port `1433`. If SQL Server is still starting after a laptop restart, the backend waits and retries the database connection before failing. This makes `npm start` more reliable during demos.
 
 ---
 
@@ -179,7 +184,13 @@ Start the server:
 npm start
 ```
 
-The database tables are created automatically when the server starts if they do not already exist.
+The database tables are created automatically when the server starts if they do not already exist. If SQL Server is still starting, the terminal may briefly show:
+
+```text
+SQL Server is not ready yet. Retrying in 5s...
+```
+
+This is normal after restarting the laptop. Once SQL Server is ready, the app continues starting.
 
 Open the web application:
 
@@ -226,7 +237,7 @@ Run the Jest test suite:
 npm test
 ```
 
-The tests cover the business logic functions in `src/logic.js`, including validation, filtering, rating calculation, and star display formatting.
+The tests cover important business logic functions in `src/logic.js`, including player validation, team validation, position validation, rating validation, and average rating calculation.
 
 ---
 
@@ -348,4 +359,3 @@ The `src/logic.js` file contains reusable business logic that is separated from 
 | `validateCards` | Validates card selection |
 | `computeAverageRating` | Calculates a player's average rating |
 | `filterPlayersByPosition` | Filters players by position |
-| `starsDisplay` | Formats ratings as stars |
