@@ -18,6 +18,7 @@ const state = {
   currentPlayer: null,
   positionFilter: '',
   editingPlayerId: null,
+  editingReportId: null,
   pendingDeleteType: null,
   pendingDeleteId: null,
   pendingDeleteExtra: null,
@@ -77,6 +78,13 @@ const api = {
   async createReport(playerId, data) {
     const res = await fetch(`/api/players/${playerId}/reports`, {
       method: 'POST', headers: authHeaders(), body: JSON.stringify(data),
+    });
+    return { ok: res.ok, data: await res.json() };
+  },
+
+  async updateReport(id, data) {
+    const res = await fetch(`/api/reports/${id}`, {
+      method: 'PUT', headers: authHeaders(), body: JSON.stringify(data),
     });
     return { ok: res.ok, data: await res.json() };
   },
@@ -186,6 +194,7 @@ function renderDetailView(player) {
                   <span class="report-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
                   ${cardBadge(r.received_cards)}
                   <span class="report-date">${formatDate(r.created_at)}</span>
+                  <button class="btn btn-sm btn-secondary report-edit-btn" data-id="${r.id}">Edit</button>
                   <button class="report-delete-btn" data-id="${r.id}" title="Delete report">&#10005;</button>
                 </div>
                 <div class="report-stats">
@@ -248,6 +257,13 @@ function attachDetailEvents(playerId) {
 
   document.getElementById('add-report-btn').addEventListener('click', () => openReportModal(playerId));
 
+  document.querySelectorAll('.report-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const report = state.currentPlayer.reports.find(r => r.id === parseInt(btn.dataset.id));
+      if (report) openReportModal(playerId, report);
+    });
+  });
+
   document.querySelectorAll('.report-delete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       openConfirmModal('report', parseInt(btn.dataset.id), 'Delete this match report?', playerId);
@@ -274,12 +290,15 @@ function openPlayerModal(player) {
   document.getElementById('player-name').focus();
 }
 
-function openReportModal(playerId) {
-  document.getElementById('report-rating').value   = '3';
-  document.getElementById('report-minutes').value  = '90';
-  document.getElementById('report-goals').value    = '0';
-  document.getElementById('report-cards').value    = 'None';
-  document.getElementById('report-comments').value = '';
+function openReportModal(playerId, report = null) {
+  state.editingReportId = report ? report.id : null;
+  document.getElementById('report-modal-title').textContent = report ? 'Edit Match Report' : 'Add Match Report';
+  document.getElementById('report-submit-btn').textContent = report ? 'Update Report' : 'Save Report';
+  document.getElementById('report-rating').value   = report ? String(report.rating) : '3';
+  document.getElementById('report-minutes').value  = report ? report.minutes_played : '90';
+  document.getElementById('report-goals').value    = report ? report.goals_scored : '0';
+  document.getElementById('report-cards').value    = report ? report.received_cards : 'None';
+  document.getElementById('report-comments').value = report ? (report.comments || '') : '';
   clearErrors(['minutes-error', 'goals-error']);
   document.getElementById('report-modal').dataset.playerId = playerId;
   document.getElementById('report-modal').classList.remove('hidden');
@@ -362,16 +381,21 @@ document.getElementById('report-form').addEventListener('submit', async (e) => {
   const frontendErrors = validateReportForm(minutes, goals);
   if (Object.keys(frontendErrors).length > 0) { showErrors(frontendErrors); return; }
 
-  const result = await api.createReport(playerId, {
+  const payload = {
     rating:         parseInt(document.getElementById('report-rating').value),
     minutes_played: minutes,
     goals_scored:   goals,
     received_cards: document.getElementById('report-cards').value,
     comments:       document.getElementById('report-comments').value,
-  });
+  };
+
+  const result = state.editingReportId
+    ? await api.updateReport(state.editingReportId, payload)
+    : await api.createReport(playerId, payload);
 
   if (!result.ok) { showErrors(result.data.errors || {}); return; }
   closeAllModals();
+  state.editingReportId = null;
   await showDetailView(playerId);
 });
 

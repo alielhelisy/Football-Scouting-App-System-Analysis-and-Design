@@ -243,6 +243,7 @@ The tests cover the business logic functions in `src/logic.js`, including valida
 | DELETE | `/api/players/:id` | Delete an owned player and its reports |
 | GET | `/api/players/:id/reports` | Get reports for an owned player |
 | POST | `/api/players/:id/reports` | Create a report for an owned player |
+| PUT | `/api/reports/:id` | Update an owned report |
 | DELETE | `/api/reports/:id` | Delete an owned report |
 
 Protected endpoints require:
