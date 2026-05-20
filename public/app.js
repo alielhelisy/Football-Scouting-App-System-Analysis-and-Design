@@ -110,7 +110,7 @@ function escapeHtml(str) {
 
 function ratingText(avg) {
   if (avg === null || avg === undefined) return '<span class="no-rating">No reports yet</span>';
-  return `Average rating: ${avg}/5`;
+  return `Average rating: ${avg}`;
 }
 
 function cardBadge(card) {
@@ -189,7 +189,7 @@ function renderDetailView(player) {
           : player.reports.map(r => `
               <div class="report-card">
                 <div class="report-top">
-                  <span class="report-rating">Rating: ${r.rating}/5</span>
+                  <span class="report-rating">Rating: ${r.rating}</span>
                   ${cardBadge(r.received_cards)}
                   <span class="report-date">${formatDate(r.created_at)}</span>
                   <button class="btn btn-sm btn-secondary report-edit-btn" data-id="${r.id}">Edit</button>
