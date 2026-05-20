@@ -115,7 +115,7 @@ function ratingText(avg) {
 
 function cardBadge(card) {
   const map = { Yellow: 'badge-yellow', Red: 'badge-red', None: 'badge-none' };
-  return `<span class="badge ${map[card] || 'badge-none'}">${escapeHtml(card)}</span>`;
+  return `<span class="badge ${map[card] || 'badge-none'}">Cards: ${escapeHtml(card)}</span>`;
 }
 
 function formatDate(str) {
