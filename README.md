@@ -195,6 +195,19 @@ http://localhost:3000/api-docs
 
 ---
 
+## Demo Account
+
+For a quick local demo, use:
+
+```text
+Username: admin
+Password: admin123
+```
+
+You can also create a new account from the Register page. Each account only sees and manages its own players and reports.
+
+---
+
 ## Development Mode
 
 Run the server with automatic restart:
