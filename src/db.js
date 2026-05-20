@@ -1,7 +1,8 @@
 const sql = require('mssql');
 
 const config = {
-  server: 'localhost\\SQLEXPRESS',
+  server: 'localhost',
+  port: 1433,
   authentication: {
     type: 'default',
     options: {
@@ -12,16 +13,35 @@ const config = {
   options: {
     database: 'ScoutingAppSAD',
     trustServerCertificate: true,
-    encrypt: true,
+    encrypt: false,
     enableArithAbort: true,
   },
 };
 
 let pool;
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function connectWithRetry(retries = 12, delayMs = 5000) {
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      return await sql.connect(config);
+    } catch (err) {
+      if (attempt === retries) {
+        throw err;
+      }
+
+      console.log(`SQL Server is not ready yet. Retrying in ${delayMs / 1000}s...`);
+      await wait(delayMs);
+    }
+  }
+}
+
 async function getPool() {
   if (!pool) {
-    pool = await sql.connect(config);
+    pool = await connectWithRetry();
   }
   return pool;
 }
